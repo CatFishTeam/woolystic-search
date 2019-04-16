@@ -2,6 +2,24 @@ const csvtojsonV2 = require("csvtojson/v2");
 const { Client } = require('@elastic/elasticsearch')
 const client = new Client({ node: 'http://localhost:9200' })
 
+
+client.indices.exists({index: 'wooly_gang'}, (err, res, status) => {
+    if (res) {
+        console.log('index already exists');
+    } else {
+        client.indices.create({
+            index: 'wooly_gang'
+        }, function (err, resp, status) {
+            if (err) {
+                console.log(err);
+            } else {
+                console.log("create", resp);
+            }
+        }).then(data => console.log(data))
+            .catch(err => console.log(err));
+    }
+});
+
 const converter = csvtojsonV2({
     delimiter: ';',
     trim: true,
@@ -27,8 +45,7 @@ converter
             };
         })
 
-        console.log(jsonObj.length)
-
+        /*
         client.bulk({
             index: 'wooly_gang',
             body: jsonObj
@@ -37,6 +54,16 @@ converter
         }).catch((error) => {
             console.log(error)
         });
+         */
+
+        body.forEach((b) => {
+            client.index({
+                index: 'wooly_gang',
+                body: b
+            })
+                .then(data => console.log(data))
+                .catch(err => console.log(err));
+        })
     })
     .catch((error) => {
         console.log(error)
