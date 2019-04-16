@@ -14,16 +14,17 @@ client.indices.create({
 });
 
 const schema = {
-    name: { type: 'text' },
-    description: { type: 'text' },
+    title: { type: 'text' },
+    seo_title: { type: 'text' },
     url: { type: 'text' },
     author: { type: 'text' },
     date: { type: 'text' },
     category: { type: 'text' },
+    locales: { type: 'text' },
     content: { type: 'text' }
 }
 
-client.indices.putMapping({ 'wooly_gang', 'document', body: { properties: schema } })
+client.indices.putMapping({ body: { properties: schema } })
 
 
 const converter = csvtojsonV2({
@@ -36,25 +37,29 @@ const csvFilePath = './data.csv'
 converter
     .fromFile(csvFilePath)
     .then((jsonObj) => {
+        const body = jsonObj.map(row => {
+            return {
+                "name": row.field1,
+                "description": row.field2,
+                "url": row.field3,
+                "author": row.field4,
+                "date": row.field5,
+                "category": row.field6,
+                "lang": row.field7,
+                "content": row.field8,
+            };
+        })
 
-        client.index({
-            index: 'wooly_gang',
-            type: "document",
-            body: {
-                "name": jsonObj.field1,
-                "description": jsonObj.field2,
-                "url": jsonObj.field3,
-                "author": jsonObj.field4,
-                "date": jsonObj.field5,
-                "category": jsonObj.field6,
-                "lang": jsonObj.field7,
-                "content": jsonObj.field8,
-
-            }
-        }, function (err, resp, status) {
-            console.log(resp);
-        });
-
+        body.forEach((b) => {
+            client.index({
+                index: 'wooly_gang',
+                type: "document",
+                body: b
+            });
+        })
     })
+    .catch((error) => {
+        console.log(error)
+    });
 
 
