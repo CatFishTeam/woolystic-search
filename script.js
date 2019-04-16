@@ -3,28 +3,23 @@ const { Client } = require('@elastic/elasticsearch')
 const client = new Client({ node: 'http://localhost:9200' })
 
 
-client.indices.create({
-    index: 'wooly_gang'
-}, function (err, resp, status) {
-    if (err) {
-        console.log(err);
+
+client.indices.exists({index: 'wooly_gang'}, (err, res, status) => {
+    if (res) {
+        console.log('index already exists');
     } else {
-        console.log("create", resp);
+        client.indices.create({
+            index: 'wooly_gang'
+        }, function (err, resp, status) {
+            if (err) {
+                console.log(err);
+            } else {
+                console.log("create", resp);
+            }
+        }).then(data => console.log(data))
+            .catch(err => console.log(err));
     }
 });
-
-const schema = {
-    title: { type: 'text' },
-    seo_title: { type: 'text' },
-    url: { type: 'text' },
-    author: { type: 'text' },
-    date: { type: 'text' },
-    category: { type: 'text' },
-    locales: { type: 'text' },
-    content: { type: 'text' }
-}
-
-client.indices.putMapping({ body: { properties: schema } })
 
 
 const converter = csvtojsonV2({
@@ -53,9 +48,10 @@ converter
         body.forEach((b) => {
             client.index({
                 index: 'wooly_gang',
-                type: "document",
                 body: b
-            });
+            })
+                .then(data => console.log(data))
+                .catch(err => console.log(err));
         })
     })
     .catch((error) => {
