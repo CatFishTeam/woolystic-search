@@ -7,7 +7,6 @@ const {format, subHours} = require('date-fns')
 const CoinMarketCap = require('coinmarketcap-api')
 const cmc = new CoinMarketCap(process.env.CMC_API_KEY)
 
-
 global.fetch = require('node-fetch')
 const cc = require('cryptocompare')
 cc.setApiKey(process.env.CRYPTOCOMP_API_KEY)
@@ -42,7 +41,7 @@ cmc.getTickers({limit: 25}).then(res => {
                 const tweetHashtags = tw.entities.hashtags.map(hashtag => hashtag.text.toLowerCase())
 
                 let tweet = {
-                    created_at: tw.created_at,
+                    created_at: format(tw.created_at, 'YYYY-MM-DD'),
                     id: tw.id,
                     text: tw.text,
                     retweet_count: tw.retweet_count,
