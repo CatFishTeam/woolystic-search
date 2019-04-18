@@ -1,8 +1,9 @@
 require('dotenv').config()
-const {ClientElastic} = require('@elastic/elasticsearch')
-const clientElastic = new ClientElastic({node: 'http://localhost:9200'})
+const {Client} = require('@elastic/elasticsearch')
+const clientElastic = new Client({node: 'http://localhost:9200'})
 const Twitter = require('twitter');
 const CoinMarketCap = require('coinmarketcap-api')
+const util = require('util');
 
 const clientTwitter = new Twitter({
     consumer_key: process.env.CONSUMER_API,
@@ -29,3 +30,21 @@ clientElastic.indices.exists({index: 'wooly_gang'}, (err, res, status) => {
             .catch(err => console.log(err));
     }
 });
+
+
+clientTwitter.get('search/tweets', {
+    q: '#eth',
+    lang: 'en'
+}, function (error, tweets, response) {
+    console.log(util.inspect(tweets, false, null, true))
+});
+
+clientCMC.getIdMap({
+    symbol: ['BTC', 'ETH']
+})
+    .then(data => console.log(util.inspect(data, false, null, true)))
+    .catch(console.error)
+
+clientCMC.getGlobal()
+    .then(data => console.log(util.inspect(data, false, null, true)))
+    .catch(console.error)
