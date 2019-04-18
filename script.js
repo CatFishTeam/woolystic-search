@@ -33,18 +33,36 @@ clientElastic.indices.exists({index: 'wooly_gang'}, (err, res, status) => {
 
 
 clientTwitter.get('search/tweets', {
-    q: '#eth',
-    lang: 'en'
-}, function (error, tweets, response) {
+    q: '#crypto OR #eth OR #btc -filter:retweets',
+    lang: 'en',
+    count: 20,
+    result_type: 'popular'
+}, function (error, tw, response) {
+    const tweets = tw.statuses;
+    const filteredTweets = [];
+    tweets.map(tw => {
+        const tweet = {
+            created_at: tw.created_at,
+            id: tw.id,
+            text: tw.text,
+            retweet_count: tw.retweet_count,
+            favorite_count: tw.favorite_count,
+            url: `https://twitter.com/statuses/${tw.id_str}`
+        };
+        if (!tw.retweeted_status)
+            filteredTweets.push(tweet);
+    });
     console.log(util.inspect(tweets, false, null, true))
+    console.log(tweets.length)
+    console.log(filteredTweets)
 });
-
-clientCMC.getIdMap({
-    symbol: ['BTC', 'ETH']
-})
-    .then(data => console.log(util.inspect(data, false, null, true)))
-    .catch(console.error)
-
-clientCMC.getGlobal()
-    .then(data => console.log(util.inspect(data, false, null, true)))
-    .catch(console.error)
+//
+// clientCMC.getIdMap({
+//     symbol: ['BTC', 'ETH']
+// })
+//     .then(data => console.log(util.inspect(data, false, null, true)))
+//     .catch(console.error)
+//
+// clientCMC.getGlobal()
+//     .then(data => console.log(util.inspect(data, false, null, true)))
+//     .catch(console.error)
