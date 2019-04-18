@@ -15,25 +15,6 @@ const clientTwitter = new Twitter({
     access_token_secret: process.env.TWITTER_ACCESS_TOKEN_SECRET
 });
 
-/*
-clientElastic.indices.exists({index: 'wooly_gang'}, (err, res, status) => {
-    if (res) {
-        console.log('index already exists');
-    } else {
-        clientElastic.indices.create({
-            index: 'wooly_gang'
-        }, function (err, resp, status) {
-            if (err) {
-                console.log(err);
-            } else {
-                console.log("create", resp);
-            }
-        }).then(data => console.log(data))
-            .catch(err => console.log(err));
-    }
-});
-
- */
 
 
 clientTwitter.get('search/tweets', {
@@ -58,9 +39,9 @@ clientTwitter.get('search/tweets', {
             filteredTweets.push(tweet);
 
         const timestamp = new Date(tweet.created_at)
-        const limit = 60;
+        const limit = 1;
 
-        cc.histoMinute('BTC', 'USD', {timestamp: timestamp, limit: limit})
+        cc.histoHour('BTC', 'USD', {timestamp: timestamp, limit: limit})
             .then(data => {
                 console.log(data)
             })
@@ -69,5 +50,11 @@ clientTwitter.get('search/tweets', {
     console.log(util.inspect(tweets, false, null, true))
     console.log(tweets.length)
     console.log(filteredTweets)
+    clientElastic.bulk({
+        index: 'tweets',
+        body: filteredTweets
+    })
+        .then(data => console.log(data))
+        .catch(err => console.log(err));
 });
 
