@@ -33,16 +33,19 @@ clientElastic.indices.exists({index: 'wooly_gang'}, (err, res, status) => {
     }
 });
 
+ */
+
 
 clientTwitter.get('search/tweets', {
     q: '#crypto OR #eth OR #btc -filter:retweets',
     lang: 'en',
-    count: 20,
+    count: 1,
     result_type: 'popular'
 }, function (error, tw, response) {
     const tweets = tw.statuses;
     const filteredTweets = [];
     tweets.map(tw => {
+        console.log(tw)
         const tweet = {
             created_at: tw.created_at,
             id: tw.id,
@@ -53,24 +56,18 @@ clientTwitter.get('search/tweets', {
         };
         if (!tw.retweeted_status)
             filteredTweets.push(tweet);
+
+        const timestamp = new Date(tweet.created_at)
+        const limit = 60;
+
+        cc.histoMinute('BTC', 'USD', {timestamp: timestamp, limit: limit})
+            .then(data => {
+                console.log(data)
+            })
+            .catch(console.error)
     });
     console.log(util.inspect(tweets, false, null, true))
     console.log(tweets.length)
     console.log(filteredTweets)
-});*/
+});
 
-const timestamp = new Date('2017-01-01')
-
-cc.histoMinute('BTC', 'USD', timestamp)
-    .then(data => {
-        console.log(data)
-        // -> [ { time: 1487970960,
-        //        close: 1171.97,
-        //        high: 1172.72,
-        //        low: 1171.97,
-        //        open: 1172.37,
-        //        volumefrom: 25.06,
-        //        volumeto: 29324.12 },
-        //        ... ]
-    })
-    .catch(console.error)
