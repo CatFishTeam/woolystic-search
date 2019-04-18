@@ -2,8 +2,11 @@ require('dotenv').config()
 const {Client} = require('@elastic/elasticsearch')
 const clientElastic = new Client({node: 'http://localhost:9200'})
 const Twitter = require('twitter');
-const CoinMarketCap = require('coinmarketcap-api')
 const util = require('util');
+
+global.fetch = require('node-fetch')
+const cc = require('cryptocompare')
+cc.setApiKey(process.env.CRYPTOCOMP_API_KEY)
 
 const clientTwitter = new Twitter({
     consumer_key: process.env.CONSUMER_API,
@@ -12,8 +15,7 @@ const clientTwitter = new Twitter({
     access_token_secret: process.env.TWITTER_ACCESS_TOKEN_SECRET
 });
 
-const clientCMC = new CoinMarketCap(process.env.CMC_API_KEY)
-
+/*
 clientElastic.indices.exists({index: 'wooly_gang'}, (err, res, status) => {
     if (res) {
         console.log('index already exists');
@@ -55,14 +57,20 @@ clientTwitter.get('search/tweets', {
     console.log(util.inspect(tweets, false, null, true))
     console.log(tweets.length)
     console.log(filteredTweets)
-});
-//
-// clientCMC.getIdMap({
-//     symbol: ['BTC', 'ETH']
-// })
-//     .then(data => console.log(util.inspect(data, false, null, true)))
-//     .catch(console.error)
-//
-// clientCMC.getGlobal()
-//     .then(data => console.log(util.inspect(data, false, null, true)))
-//     .catch(console.error)
+});*/
+
+const timestamp = new Date('2017-01-01')
+
+cc.histoMinute('BTC', 'USD', timestamp)
+    .then(data => {
+        console.log(data)
+        // -> [ { time: 1487970960,
+        //        close: 1171.97,
+        //        high: 1172.72,
+        //        low: 1171.97,
+        //        open: 1172.37,
+        //        volumefrom: 25.06,
+        //        volumeto: 29324.12 },
+        //        ... ]
+    })
+    .catch(console.error)
