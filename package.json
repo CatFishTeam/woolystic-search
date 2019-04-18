@@ -12,6 +12,7 @@
     "@elastic/elasticsearch": "^7.0.0-rc.1",
     "coinmarketcap-api": "^3.0.0",
     "cryptocompare": "^1.0.0",
+    "date-fns": "^1.30.1",
     "dotenv": "^7.0.0",
     "twitter": "^1.7.1"
   }
