@@ -1,43 +1,5 @@
 import Chart from 'chart.js';
 
-var ctx = document.getElementById('myChart').getContext('2d');
-var myChart = new Chart(ctx, {
-    type: 'bar',
-    data: {
-        labels: ['Red', 'Blue', 'Yellow', 'Green', 'Purple', 'Orange'],
-        datasets: [{
-            label: '# of Votes',
-            data: [12, 19, 3, 5, 2, 3],
-            backgroundColor: [
-                'rgba(255, 99, 132, 0.2)',
-                'rgba(54, 162, 235, 0.2)',
-                'rgba(255, 206, 86, 0.2)',
-                'rgba(75, 192, 192, 0.2)',
-                'rgba(153, 102, 255, 0.2)',
-                'rgba(255, 159, 64, 0.2)'
-            ],
-            borderColor: [
-                'rgba(255, 99, 132, 1)',
-                'rgba(54, 162, 235, 1)',
-                'rgba(255, 206, 86, 1)',
-                'rgba(75, 192, 192, 1)',
-                'rgba(153, 102, 255, 1)',
-                'rgba(255, 159, 64, 1)'
-            ],
-            borderWidth: 1
-        }]
-    },
-    options: {
-        scales: {
-            yAxes: [{
-                ticks: {
-                    beginAtZero: true
-                }
-            }]
-        }
-    }
-});
-
 fetch('/getData', {
     method: 'POST',
     headers: {
@@ -46,8 +8,59 @@ fetch('/getData', {
     body: JSON.stringify({
         query: {
             match_all: {}
-        }
+        },
+        size: 100
     })
 })
-    .then( res => res.json())
-    .then( data => console.log(data))
+    .then(res => res.json())
+    .then(tweets => {
+        let firstTweetByCrypto = [];
+        tweets.filter(({_source}) => {
+            const crypto = _source.crypto;
+            if (!firstTweetByCrypto[crypto]) firstTweetByCrypto[crypto] = _source;
+        });
+
+        firstTweetByCrypto = Object.values(firstTweetByCrypto);
+
+        firstTweetByCrypto.map((tweet, index) => console.log(index, tweet))
+
+        firstTweetByCrypto.forEach(function (tweet, index) {
+            if (index > 9) return;
+            console.log(tweet.crypto);
+            document.getElementById("charts").innerHTML += `<canvas id="chart_${index}"></canvas>`
+            const ctx = document.getElementById(`chart_${index}`).getContext('2d');
+
+            const data = [];
+            const labels = [];
+            const volume = tweet.volume;
+
+            volume.filter((v, index) => {
+                labels.push(index);
+                data.push(Object.values(v)[0]);
+            });
+
+            new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels,
+                    datasets: [{
+                        label: `Volume per hour - #${tweet.crypto}`,
+                        data,
+                        backgroundColor: 'rgba(255, 99, 132, 0.2)',
+                        borderColor: 'rgba(255, 99, 132, 1)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    scales: {
+                        yAxes: [{
+                            ticks: {
+                                beginAtZero: true
+                            }
+                        }]
+                    }
+                }
+            });
+
+        });
+    });
