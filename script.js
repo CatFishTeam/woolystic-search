@@ -24,7 +24,6 @@ app.get('/', (req, res) => {
 
 
 app.post('/getData', (req, res) => {
-
     clientElastic.search({
         index: 'wooly_gang',
         body: req.body
@@ -32,6 +31,17 @@ app.post('/getData', (req, res) => {
         if (err) console.log(err)
         //console.log(util.inspect(result, true, null, true))
         res.send(result.body.hits.hits)
+    })
+})
+
+app.post('/getCount', (req, res) => {
+    clientElastic.count({
+        index: 'wooly_gang',
+        body: req.body
+    }, (err, result) => {
+        if (err) console.log(err)
+        //console.log(util.inspect(result, true, null, true))
+        res.send(result.body)
     })
 })
 
@@ -48,7 +58,8 @@ const clientTwitter = new Twitter({
     access_token_secret: process.env.TWITTER_ACCESS_TOKEN_SECRET
 });
 
-cmc.getTickers({limit: 1}).then(res => {
+/*
+cmc.getTickers({limit: 25}).then(res => {
     for (let data of res.data) {
         // console.log(data)
 
@@ -67,8 +78,6 @@ cmc.getTickers({limit: 1}).then(res => {
             const tweets = tw.statuses;
             const filteredTweets = [];
             tweets.map(tw => {
-                // console.log(util.inspect(tw, true, null, true))
-
                 const tweetHashtags = tw.entities.hashtags.map(hashtag => hashtag.text.toLowerCase())
 
                 let tweet = {
@@ -78,6 +87,7 @@ cmc.getTickers({limit: 1}).then(res => {
                     retweet_count: tw.retweet_count,
                     favorite_count: tw.favorite_count,
                     url: `https://twitter.com/statuses/${tw.id_str}`,
+                    hashtags: tweetHashtags,
                     crypto: data.symbol.toLowerCase(),
                     volume: []
                 };
@@ -107,5 +117,5 @@ cmc.getTickers({limit: 1}).then(res => {
             });
         });
     }
-
 });
+ */
