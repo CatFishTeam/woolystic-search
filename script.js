@@ -12,6 +12,7 @@ var path = require('path');
 const express = require('express')
 const app = express()
 app.use(express.static('public'))
+app.use(express.json())
 const port = 3000
 
 app.locals.variable_you_need = 42;
@@ -21,15 +22,12 @@ app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname + '/index.html'))
 });
 
-app.get('/getData', (req, res) => {
+
+app.post('/getData', (req, res) => {
 
     clientElastic.search({
         index: 'wooly_gang',
-        body: {
-            "query": {
-                "match_all": {}
-            }
-        }
+        body: req.body
     }, (err, result) => {
         if (err) console.log(err)
         //console.log(util.inspect(result, true, null, true))
