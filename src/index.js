@@ -61,6 +61,67 @@ fetch('/getData', {
                     }
                 }
             });
-
         });
     });
+
+function getCountByCrypto(crypto){
+    let a = [];
+
+    fetch('/getCount', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            query: {
+                bool: {
+                    must: [
+                        { match: { crypto: crypto }}
+                    ]
+                }
+            }
+        })
+        })
+        .then( res => res.json())
+        .then( data => {
+            a['crypto'] = crypto
+            a['count'] = data.count
+        })
+    return a
+}
+
+const top25 = [
+    ['btc', 'bitcoin'],
+    ['eth', 'ethereum'],
+    ['xrp', 'xrp'],
+    ['bch', 'bitcoin cash'],
+    ['ltc', 'litecoin'],
+    ['eos', 'eos'],
+    ['bnb', 'binance coin'],
+    ['usdt', 'tether'],
+    ['xlm','stellar'],
+    ['ada','cardano'],
+    ['trx','tron'],
+    ['xmr','monero'],
+    ['dash','dash'],
+    ['bsv','bitcoin sv'],
+    ['xtz','tezos'],
+    ['miota','iota'],
+    ['neo','neo'],
+    ['etc','ethereum classic'],
+    ['ont','ontologie'],
+    ['mkr','maker'],
+    ['xem','nem'],
+    ['bat','basic attention token'],
+    ['zec', 'zcash'],
+    ['cro', 'crypto.com chain'],
+    ['vet', 'vechain']
+]
+
+let statsTop25 = [];
+top25.forEach((crypto) => {
+    let res = getCountByCrypto(crypto[0])
+    statsTop25.push(res)
+})
+
+console.log(statsTop25);
