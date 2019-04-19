@@ -18,13 +18,28 @@ app.locals.variable_you_need = 42;
 
 app.listen(port, () => console.log(`Example app listening on port ${port}!`))
 app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname + '/index.html')),
-        {title: 'Hey', message: 'Hello there!'}
+    res.sendFile(path.join(__dirname + '/index.html'))
 });
 
 app.get('/test', (req, res) => {
-    res.send('test')
-});
+
+    clientElastic.search({
+        index: 'wooly_gang',
+        body: {
+            "query": {
+                "match_all": {
+
+                }
+            }
+        }
+    }, (err, result) => {
+        if (err) console.log(err)
+        //console.log(util.inspect(result, true, null, true))
+        res.send(result.body.hits.hits)
+    })
+})
+
+
 
 global.fetch = require('node-fetch')
 const cc = require('cryptocompare')
