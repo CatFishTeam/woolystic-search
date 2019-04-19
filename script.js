@@ -31,10 +31,47 @@ app.post('/getData', (req, res) => {
     }, (err, result) => {
         if (err) console.log(err)
         //console.log(util.inspect(result, true, null, true))
-        res.send(result.body.hits.hits)
+        res.send(result.body)
     })
 })
 
+clientElastic.indices.create({
+    index: 'wooly_gang'
+}, function (err, resp, status) {
+    clientElastic.indices.putMapping({
+        index: "wooly_gang",
+        include_type_name: true,
+        type: "tweet",
+        body: {
+            tweet: {
+                properties: {
+                    created_at: {"type": "date"},
+                    id: {"type": "keyword"},
+                    crypto: {
+                        "type": "keyword",
+                        "fields": {
+                            "keyword": {
+                                "type": "keyword"
+                            }
+                        }
+                    },
+                    favorite_count: {"type": "long"},
+                    retweet_count: {"type": "long"},
+                    text: {"type": "text"},
+                    url: {"type": "keyword"},
+                    volume: {
+                        "type": "array"
+                    }
+                }
+            }
+        }
+
+    }, function (err, resp, respcode) {
+        console.log(util.inspect(err, true, null, true));
+        console.log(util.inspect(resp, true, null, true));
+        console.log(util.inspect(respcode, true, null, true));
+    });
+})
 
 
 global.fetch = require('node-fetch')
@@ -48,7 +85,7 @@ const clientTwitter = new Twitter({
     access_token_secret: process.env.TWITTER_ACCESS_TOKEN_SECRET
 });
 
-cmc.getTickers({limit: 1}).then(res => {
+cmc.getTickers({limit: 3}).then(res => {
     for (let data of res.data) {
         // console.log(data)
 
@@ -62,8 +99,6 @@ cmc.getTickers({limit: 1}).then(res => {
             count: 100,
             result_type: 'popular'
         }, function (error, tw, response) {
-            console.log('ICI')
-            console.log(response)
             const tweets = tw.statuses;
             const filteredTweets = [];
             tweets.map(tw => {
@@ -87,7 +122,7 @@ cmc.getTickers({limit: 1}).then(res => {
 
                 cc.histoHour(data.symbol, 'USD', {timestamp: timestamp, limit: limit})
                     .then(data => {
-                        for(let i=0; i < limit; i++){
+                        for (let i = 0; i < limit; i++) {
                             tweet.volume.push({[data[i].time]: data[i].volumefrom})
                         }
 
@@ -95,10 +130,10 @@ cmc.getTickers({limit: 1}).then(res => {
                         filteredTweets.push(tweet);
 
                         clientElastic.bulk({
-                            index: 'tweets',
+                            index: 'wooly_gang',
                             body: filteredTweets
                         })
-                            .then(data => console.log(data))
+                            .then(data => console.log())
                             .catch(err => console.log(err));
 
 

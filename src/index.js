@@ -49,5 +49,88 @@ fetch('/getData', {
         }
     })
 })
-    .then( res => res.json())
-    .then( data => console.log(data))
+    .then(res => res.json())
+    .then(data => console.log(data))
+
+
+
+fetch('/getData', {
+    method: 'POST',
+    headers: {
+        'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+        "aggs": {
+            "group_by_crypto": {
+                "terms": {
+                    "field": "crypto.keyword"
+                },
+                "aggs": {
+                    "sum_retweet": {
+                        "sum": {
+                            "field": "retweet_count"
+                        }
+                    },
+                    "sum_fav": {
+                        "sum": {
+                            "field": "favorite_count"
+                        }
+                    }
+                }
+            }
+        }
+    })
+})
+    .then(res => res.json())
+    .then(data => {
+        console.log(data.aggregations.group_by_crypto.buckets)
+
+        let buckets = data.aggregations.group_by_crypto.buckets
+
+        let dataFav = []
+        let dataRT = []
+
+        let labels = [];
+
+        buckets.forEach(function (bucket) {
+            labels.push(bucket.key)
+            dataFav.push(bucket.sum_fav.value)
+            dataRT.push(bucket.sum_retweet.value)
+        })
+
+        console.log(labels)
+        console.log(dataFav)
+        console.log(dataRT)
+
+        var ctxChartReactByCryptoPerHours = document.getElementById('chartReactByCryptoPerHours').getContext('2d');
+        var chartReactByCryptoPerHours = new Chart(ctxChartReactByCryptoPerHours, {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: "FAV",
+                    backgroundColor: '#cc3399',
+                    data: dataFav
+                }, {
+                    label: "RT",
+                    backgroundColor: '#0099ff',
+                    data: dataRT
+                }]
+            },
+            options: {
+                responsive: false,
+                legend: {
+                    display: false
+                },
+                scales: {
+                    yAxes: [{
+                        stacked: true
+                    }],
+                    xAxes: [{
+                        stacked: true
+                    }]
+                },
+
+            }
+        })
+    })
