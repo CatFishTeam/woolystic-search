@@ -3,7 +3,7 @@ const {Client} = require('@elastic/elasticsearch')
 const clientElastic = new Client({node: 'http://localhost:9200'})
 const Twitter = require('twitter');
 const util = require('util');
-const {format, subHours} = require('date-fns')
+const {format, subDays} = require('date-fns')
 const CoinMarketCap = require('coinmarketcap-api')
 const cmc = new CoinMarketCap(process.env.CMC_API_KEY)
 var path = require('path');
@@ -48,79 +48,64 @@ const clientTwitter = new Twitter({
     access_token_secret: process.env.TWITTER_ACCESS_TOKEN_SECRET
 });
 
-/*
-cc.histoHour('BTC', 'USD', {timestamp: timestamp, limit: limit})
-    .then(data => {
-        tweet.volumeNow = data[0].volumefrom
-        tweet.volumeFutur = data[1].volumefrom
+cmc.getTickers({limit: 1}).then(res => {
+    for (let data of res.data) {
+        // console.log(data)
 
-        filteredTweets.push({"index": {"_index": "wooly_gang"}})
-        filteredTweets.push(tweet);
+        clientTwitter.get('search/tweets', {
+            q: `#${data.symbol.toLowerCase()} OR #${data.name.toLowerCase().replace(' ', '')} -filter:retweets`,
+            // lang: 'en',
+            until: format(
+                subDays(new Date(), 2),
+                'YYYY-MM-DD'
+            ),
+            count: 100,
+            result_type: 'popular'
+        }, function (error, tw, response) {
+            console.log('ICI')
+            console.log(response)
+            const tweets = tw.statuses;
+            const filteredTweets = [];
+            tweets.map(tw => {
+                // console.log(util.inspect(tw, true, null, true))
 
-        clientElastic.bulk({
-            index: 'tweets',
-            body: filteredTweets
-        })
-            .then(data => console.log(data))
-            .catch(err => console.log(err));
-    })
-    .catch(console.error)
-*/
+                const tweetHashtags = tw.entities.hashtags.map(hashtag => hashtag.text.toLowerCase())
 
-// cmc.getTickers({limit: 25}).then(res => {
-//     for (let data of res.data.slice(0, 2)) {// virer le slice, c'est juste pour test sur deux now
-//         console.log(data)
-//
-//         clientTwitter.get('search/tweets', {
-//             q: `#${data.symbol.toLowerCase()} OR #${data.name.toLowerCase().replace(' ', '')} -filter:retweets`,
-//             // lang: 'en',
-//             until: format(
-//                 subHours(new Date(), 1),
-//                 'YYYY-MM-DD'
-//             ),
-//             count: 100,
-//             result_type: 'popular'
-//         }, function (error, tw, response) {
-//             const tweets = tw.statuses;
-//             const filteredTweets = [];
-//             tweets.map(tw => {
-//                 // console.log(util.inspect(tw, true, null, true))
-//
-//                 const tweetHashtags = tw.entities.hashtags.map(hashtag => hashtag.text.toLowerCase())
-//
-//                 let tweet = {
-//                     created_at: format(tw.created_at, 'YYYY-MM-DD'),
-//                     id: tw.id,
-//                     text: tw.text,
-//                     retweet_count: tw.retweet_count,
-//                     favorite_count: tw.favorite_count,
-//                     url: `https://twitter.com/statuses/${tw.id_str}`,
-//                     crypto: data.symbol.toLowerCase()
-//                 };
-//
-//                 const timestamp = new Date(tweet.created_at)
-//                 const limit = 1;
-//
-//                 cc.histoHour('BTC', 'USD', {timestamp: timestamp, limit: limit})
-//                     .then(data => {
-//                         tweet.volumeNow = data[0].volumefrom
-//                         tweet.volumeFutur = data[1].volumefrom
-//
-//                         filteredTweets.push({"index": {"_index": "wooly_gang"}})
-//                         filteredTweets.push(tweet);
-//
-//                         clientElastic.bulk({
-//                             index: 'tweets',
-//                             body: filteredTweets
-//                         })
-//                             .then(data => console.log(data))
-//                             .catch(err => console.log(err));
-//
-//
-//                     })
-//                     .catch(console.error)
-//             });
-//         });
-//     }
-//
-// });
+                let tweet = {
+                    created_at: tw.created_at,
+                    id: tw.id,
+                    text: tw.text,
+                    retweet_count: tw.retweet_count,
+                    favorite_count: tw.favorite_count,
+                    url: `https://twitter.com/statuses/${tw.id_str}`,
+                    crypto: data.symbol.toLowerCase(),
+                    volume: []
+                };
+
+                const timestamp = new Date(tweet.created_at)
+                const limit = 48;
+
+                cc.histoHour(data.symbol, 'USD', {timestamp: timestamp, limit: limit})
+                    .then(data => {
+                        for(let i=0; i < limit; i++){
+                            tweet.volume.push({[data[i].time]: data[i].volumefrom})
+                        }
+
+                        filteredTweets.push({"index": {"_index": "wooly_gang"}})
+                        filteredTweets.push(tweet);
+
+                        clientElastic.bulk({
+                            index: 'tweets',
+                            body: filteredTweets
+                        })
+                            .then(data => console.log(data))
+                            .catch(err => console.log(err));
+
+
+                    })
+                    .catch(console.error)
+            });
+        });
+    }
+
+});
