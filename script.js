@@ -21,15 +21,13 @@ app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname + '/index.html'))
 });
 
-app.get('/test', (req, res) => {
+app.get('/getData', (req, res) => {
 
     clientElastic.search({
         index: 'wooly_gang',
         body: {
             "query": {
-                "match_all": {
-
-                }
+                "match_all": {}
             }
         }
     }, (err, result) => {
@@ -52,6 +50,24 @@ const clientTwitter = new Twitter({
     access_token_secret: process.env.TWITTER_ACCESS_TOKEN_SECRET
 });
 
+/*
+cc.histoHour('BTC', 'USD', {timestamp: timestamp, limit: limit})
+    .then(data => {
+        tweet.volumeNow = data[0].volumefrom
+        tweet.volumeFutur = data[1].volumefrom
+
+        filteredTweets.push({"index": {"_index": "wooly_gang"}})
+        filteredTweets.push(tweet);
+
+        clientElastic.bulk({
+            index: 'tweets',
+            body: filteredTweets
+        })
+            .then(data => console.log(data))
+            .catch(err => console.log(err));
+    })
+    .catch(console.error)
+*/
 
 // cmc.getTickers({limit: 25}).then(res => {
 //     for (let data of res.data.slice(0, 2)) {// virer le slice, c'est juste pour test sur deux now
