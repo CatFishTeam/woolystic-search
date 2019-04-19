@@ -4,6 +4,23 @@ const clientElastic = new Client({node: 'http://localhost:9200'})
 const Twitter = require('twitter');
 const util = require('util');
 const { format, subHours } = require('date-fns')
+var path = require('path');
+
+
+
+const express = require('express')
+const app = express()
+app.use(express.static('public'))
+const port = 3000
+
+app.locals.variable_you_need = 42;
+
+app.listen(port, () => console.log(`Example app listening on port ${port}!`))
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname + '/index.html')),
+    {title: 'Hey', message: 'Hello there!'}
+});
+
 
 global.fetch = require('node-fetch')
 const cc = require('cryptocompare')
@@ -81,3 +98,4 @@ clientTwitter.get('search/tweets', {
     });
 });
 
+const yolo = "test"
